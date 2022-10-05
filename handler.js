@@ -3,10 +3,15 @@ const AWS = require('aws-sdk');
 const { success } = require('./shared/responses');
 const { buildWordQuery } = require('./queries/build-word-query');
 
-module.exports.queryWord = async (event) => {
+const getItemsByWord = (word) => {
   const docClient = new AWS.DynamoDB.DocumentClient();
-  const { word }  = event.queryStringParameters;
   const wordQuery = buildWordQuery(word);
-  const { Items } = await docClient.query(wordQuery).promise()
+  return word ? docClient.query(wordQuery).promise() : docClient.scan(wordQuery).promise();
+}
+
+module.exports.queryWord = async (event) => {
+  const { word }  = event.queryStringParameters;
+  const { Items } = await getItemsByWord(word)
   return success(Items)
 };
+
